@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamHub - RTX Video Super Resolution Player</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+</head>
+<body>
+  <!-- Header & Navbar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo-area">
+        <span class="logo-icon">⚡</span>
+        <h1 class="logo-text">StreamHub <span class="badge-vsr">RTX VSR</span></h1>
+      </div>
+      <div class="nav-actions">
+        <button id="btnVsrGuide" class="btn btn-outline">
+          <span class="icon-glow">🟢</span> Status & Panduan RTX VSR
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Hero / Upload Section -->
+    <section class="upload-section">
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-content">
+          <div class="upload-icon">📁</div>
+          <h3>Seret & Jatuhkan Video ke Sini</h3>
+          <p>Mendukung format <strong>MP4</strong>, <strong>MKV</strong>, dan <strong>WebM</strong> (hingga 10 GB)</p>
+          <label class="btn btn-primary" for="fileInput">
+            Pilih File Video
+          </label>
+          <input type="file" id="fileInput" accept=".mp4,.mkv,.webm" hidden>
+        </div>
+        <!-- Progress bar -->
+        <div class="upload-progress-container" id="uploadProgressContainer" style="display: none;">
+          <div class="progress-info">
+            <span id="uploadFileName">Uploading...</span>
+            <span id="uploadPercentage">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="progress-status" id="progressStatus">Mengunggah file ke server lokal...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Library Section -->
+    <section class="library-section">
+      <div class="section-header">
+        <h2>Koleksi Video Saya</h2>
+        <div class="filter-tabs">
+          <button class="filter-btn active" data-filter="all">Semua (<span id="countAll">0</span>)</button>
+          <button class="filter-btn" data-filter="mp4">MP4</button>
+          <button class="filter-btn" data-filter="mkv">MKV (HLS)</button>
+          <button class="filter-btn" data-filter="webm">WebM</button>
+        </div>
+      </div>
+
+      <div class="video-grid" id="videoGrid">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <p>Belum ada video yang diunggah. Unggah video di atas untuk mulai menonton dengan RTX VSR!</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Player Modal -->
+  <div class="modal player-modal" id="playerModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content">
+      <div class="player-header">
+        <div class="player-title-info">
+          <h3 id="playerVideoTitle">Judul Video</h3>
+          <span class="meta-tag" id="playerVideoMeta">1080p • MP4</span>
+        </div>
+        <button class="btn-close" id="btnClosePlayer">&times;</button>
+      </div>
+
+      <div class="player-wrapper">
+        <video id="mainVideo" controls playsinline></video>
+
+        <!-- RTX VSR Live HUD Indicator -->
+        <div class="vsr-hud" id="vsrHud">
+          <div class="vsr-badge" id="vsrBadge">
+            <span class="dot"></span>
+            <span id="vsrStatusText">RTX VSR Ready</span>
+          </div>
+          <div class="vsr-stats" id="vsrStats">
+            <span id="vsrResolution">Native: 0x0 ➔ Screen: 0x0</span>
+            <span id="vsrScale">Scale: 1.0x</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="player-tools">
+        <button class="btn btn-sm btn-outline" id="btnToggleFullscreen">⛶ Layar Penuh (Memicu VSR)</button>
+        <button class="btn btn-sm btn-outline" id="btnGenerateHls" style="display: none;">⚡ Buat HLS Multi-Bitrate</button>
+        <span class="tip-text">💡 <strong>Tips RTX VSR:</strong> Tekan Layar Penuh (Fullscreen) agar video di-upscale ke resolusi layar dan memicu AI tensor core RTX VSR!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RTX VSR Guide Modal -->
+  <div class="modal guide-modal" id="guideModal">
+    <div class="modal-backdrop" id="guideBackdrop"></div>
+    <div class="guide-modal-content">
+      <div class="guide-header">
+        <h3>🚀 Cara Memastikan RTX VSR Aktif</h3>
+        <button class="btn-close" id="btnCloseGuide">&times;</button>
+      </div>
+      <div class="guide-body">
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Gunakan Browser Chromium</strong>
+            <p>Buka website ini melalui Google Chrome atau Microsoft Edge.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Aktifkan Hardware Acceleration</strong>
+            <p>Di Chrome/Edge, buka <code>chrome://settings/system</code> dan pastikan <em>"Gunakan akselerasi grafis saat tersedia"</em> dalam posisi ON.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>NVIDIA Control Panel</strong>
+            <p>Buka NVIDIA Control Panel ➔ <em>Adjust video image settings</em> ➔ Di bawah <em>RTX video enhancement</em>, centang <strong>Super resolution</strong> dan pilih Quality 1-4.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Putar Video & Fullscreen</strong>
+            <p>Saat video diputar dan di-upscale (resolusi video lebih kecil dari resolusi layar), lampu indikator VSR di player akan menyala hijau!</p>
+          </div>
+        </div>
+      </div>
+      <div class="guide-footer">
+        <button class="btn btn-primary" id="btnGotIt">Mengerti, Siap Nonton!</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/player.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

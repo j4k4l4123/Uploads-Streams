@@ -1,0 +1,12 @@
+node_modules/
+.agents/
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/hls/*
+!storage/hls/.gitkeep
+storage/thumbnails/*
+!storage/thumbnails/.gitkeep
+storage/temp/*
+!storage/temp/.gitkeep
+data/*.db
+.env
