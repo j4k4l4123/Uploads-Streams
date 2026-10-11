@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `public/index.html:87-105`
 
-- [ ] **Step 1: Add unlock overlay button inside `.player-wrapper`**
+- [x] **Step 1: Add unlock overlay button inside `.player-wrapper`**
 Tambahkan tombol `#btnUnlockOverlay` tepat setelah `<video id="mainVideo" controls playsinline></video>` di [`public/index.html`](file:///C:/Users/ALVIN%20DWI%20LINTANG%20H/.openclaw/workspace/Project%20an/Upload%20And%20Stream/public/index.html):
 ```html
 <button id="btnUnlockOverlay" class="btn-unlock-overlay" style="display: none;">
@@ -23,14 +23,14 @@ Tambahkan tombol `#btnUnlockOverlay` tepat setelah `<video id="mainVideo" contro
 </button>
 ```
 
-- [ ] **Step 2: Add Lock and PiP buttons in `.player-tools`**
+- [x] **Step 2: Add Lock and PiP buttons in `.player-tools`**
 Tambahkan tombol `#btnToggleLock` dan `#btnTogglePip` di dalam `.player-tools`:
 ```html
 <button class="btn btn-sm btn-outline" id="btnToggleLock">🔒 Mode Fokus</button>
 <button class="btn btn-sm btn-outline" id="btnTogglePip">📺 Picture-in-Picture</button>
 ```
 
-- [ ] **Step 3: Commit Task 1**
+- [x] **Step 3: Commit Task 1**
 ```powershell
 git add public/index.html
 git commit -m "feat: add lock mode and pip buttons to player HTML markup"
@@ -43,7 +43,7 @@ git commit -m "feat: add lock mode and pip buttons to player HTML markup"
 **Files:**
 - Modify: `public/css/style.css`
 
-- [ ] **Step 1: Add Lock, Idle, and Overlay styles in `public/css/style.css`**
+- [x] **Step 1: Add Lock, Idle, and Overlay styles in `public/css/style.css`**
 Tambahkan style berikut ke akhir [`public/css/style.css`](file:///C:/Users/ALVIN%20DWI%20LINTANG%20H/.openclaw/workspace/Project%20an/Upload%20And%20Stream/public/css/style.css):
 ```css
 /* Lock / Focus Mode & Auto-Hide Styles */
@@ -96,7 +96,7 @@ Tambahkan style berikut ke akhir [`public/css/style.css`](file:///C:/Users/ALVIN
 }
 ```
 
-- [ ] **Step 2: Commit Task 2**
+- [x] **Step 2: Commit Task 2**
 ```powershell
 git add public/css/style.css
 git commit -m "feat: add css rules for player lock mode, cursor auto-hide and unlock overlay"
@@ -109,7 +109,7 @@ git commit -m "feat: add css rules for player lock mode, cursor auto-hide and un
 **Files:**
 - Modify: `public/js/player.js`
 
-- [ ] **Step 1: Add Lock Mode state and logic in `public/js/player.js`**
+- [x] **Step 1: Add Lock Mode state and logic in `public/js/player.js`**
 Definisikan variabel state:
 ```javascript
 let isPlayerLocked = false;
@@ -190,7 +190,7 @@ async function togglePictureInPicture() {
 }
 ```
 
-- [ ] **Step 2: Connect event listeners in `document.addEventListener('DOMContentLoaded')`**
+- [x] **Step 2: Connect event listeners in `document.addEventListener('DOMContentLoaded')`**
 Hubungkan:
 - `#btnToggleLock` klik ➔ `setLockMode(!isPlayerLocked)`.
 - `#btnUnlockOverlay` klik ➔ `setLockMode(false)`.
@@ -205,7 +205,7 @@ Hubungkan:
   - Tombol `Escape`: jika sedang locked, panggil `setLockMode(false)` terlebih dahulu.
 - Pada `closePlayer()`: panggil `setLockMode(false)` dan bersihkan semua timer.
 
-- [ ] **Step 3: Commit Task 3**
+- [x] **Step 3: Commit Task 3**
 ```powershell
 git add public/js/player.js
 git commit -m "feat: implement lock mode and picture-in-picture controller in player.js"
@@ -218,7 +218,7 @@ git commit -m "feat: implement lock mode and picture-in-picture controller in pl
 **Files:**
 - Test: `tests/*.test.js`
 
-- [ ] **Step 1: Run automated test suite**
+- [x] **Step 1: Run automated test suite**
 ```powershell
 npm test
 ```
@@ -231,7 +231,7 @@ Expected: 5 passing tests with exit code 0.
 **Files:**
 - Git remote: `origin/master`
 
-- [ ] **Step 1: Push changes to GitHub**
+- [x] **Step 1: Push changes to GitHub**
 ```powershell
 git push origin master
 ```
