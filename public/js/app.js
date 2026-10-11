@@ -12,6 +12,7 @@ let uploadQueue = [];
 let uploadQueueIndex = 0;
 let isQueueUploading = false;
 let queueStats = { success: 0, failed: 0 };
+let completionTimer = null;
 
 function initDropzone() {
   const dropzone = document.getElementById('dropzone');
@@ -44,6 +45,11 @@ function initDropzone() {
 }
 
 function enqueueFiles(files) {
+  if (completionTimer) {
+    clearTimeout(completionTimer);
+    completionTimer = null;
+  }
+
   const allowed = ['.mp4', '.mkv', '.webm'];
   const validFiles = [];
   const rejectedFiles = [];
@@ -88,11 +94,13 @@ function processNextInQueue() {
     progressPercentage.textContent = '100%';
     uploadFileName.textContent = `Antrean Selesai (${totalProcessed} video)`;
 
-    setTimeout(() => {
-      progressContainer.style.display = 'none';
-      uploadQueue = [];
-      uploadQueueIndex = 0;
-      loadVideos();
+    uploadQueue = [];
+    uploadQueueIndex = 0;
+    loadVideos();
+
+    completionTimer = setTimeout(() => {
+      if (!isQueueUploading) progressContainer.style.display = 'none';
+      completionTimer = null;
     }, 2000);
     return;
   }
@@ -137,7 +145,10 @@ function processNextInQueue() {
     } else {
       queueStats.failed++;
       let err = 'Upload gagal';
-      try { err = JSON.parse(xhr.responseText).error; } catch(e){}
+      try {
+        const parsed = JSON.parse(xhr.responseText);
+        err = parsed.error || parsed.message || err;
+      } catch(e){}
       console.warn(`Gagal upload ${currentFile.name}:`, err);
       progressStatus.textContent = `Gagal mengunggah ${currentFile.name}. Melanjutkan antrean...`;
     }
@@ -148,6 +159,13 @@ function processNextInQueue() {
     queueStats.failed++;
     console.error(`Kesalahan jaringan pada ${currentFile.name}`);
     progressStatus.textContent = `Kesalahan koneksi saat mengunggah ${currentFile.name}. Melanjutkan antrean...`;
+    setTimeout(moveToNext, 600);
+  };
+
+  xhr.ontimeout = () => {
+    queueStats.failed++;
+    console.error(`Timeout saat mengunggah ${currentFile.name}`);
+    progressStatus.textContent = `Waktu habis saat mengunggah ${currentFile.name}. Melanjutkan antrean...`;
     setTimeout(moveToNext, 600);
   };
 
