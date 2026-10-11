@@ -85,6 +85,9 @@
 
       <div class="player-wrapper">
         <video id="mainVideo" controls playsinline></video>
+        <button id="btnUnlockOverlay" class="btn-unlock-overlay" style="display: none;">
+          🔓 Buka Kunci Layar
+        </button>
 
         <!-- RTX VSR Live HUD Indicator -->
         <div class="vsr-hud" id="vsrHud">
@@ -101,6 +104,8 @@
 
       <div class="player-tools">
         <button class="btn btn-sm btn-outline" id="btnToggleFullscreen">⛶ Layar Penuh (Memicu VSR)</button>
+        <button class="btn btn-sm btn-outline" id="btnToggleLock">🔒 Mode Fokus</button>
+        <button class="btn btn-sm btn-outline" id="btnTogglePip">📺 Picture-in-Picture</button>
         <button class="btn btn-sm btn-outline" id="btnGenerateHls" style="display: none;">⚡ Buat HLS Multi-Bitrate</button>
         <span class="tip-text">💡 <strong>Tips RTX VSR:</strong> Tekan Layar Penuh (Fullscreen) agar video di-upscale ke resolusi layar dan memicu AI tensor core RTX VSR!</span>
       </div>
