@@ -15,16 +15,16 @@
 **Files:**
 - Modify: `public/index.html:37`
 
-- [ ] **Step 1: Update file input to allow multiple files**
+- [x] **Step 1: Update file input to allow multiple files**
 Edit [`public/index.html`](file:///C:/Users/ALVIN%20DWI%20LINTANG%20H/.openclaw/workspace/Project%20an/Upload%20And%20Stream/public/index.html) baris 37 untuk menambahkan atribut `multiple`:
 ```html
 <input type="file" id="fileInput" accept=".mp4,.mkv,.webm" multiple hidden>
 ```
 
-- [ ] **Step 2: Verify HTML change**
+- [x] **Step 2: Verify HTML change**
 Periksa bahwa tag `<input type="file" ... multiple hidden>` memiliki atribut `multiple`.
 
-- [ ] **Step 3: Commit Task 1**
+- [x] **Step 3: Commit Task 1**
 ```powershell
 git add public/index.html
 git commit -m "feat: enable multiple file selection attribute in file input"
@@ -37,7 +37,7 @@ git commit -m "feat: enable multiple file selection attribute in file input"
 **Files:**
 - Modify: `public/js/app.js:11-98`
 
-- [ ] **Step 1: Write sequential queue manager in `public/js/app.js`**
+- [x] **Step 1: Write sequential queue manager in `public/js/app.js`**
 Ganti fungsi `initDropzone()` dan `uploadFile()` di [`public/js/app.js`](file:///C:/Users/ALVIN%20DWI%20LINTANG%20H/.openclaw/workspace/Project%20an/Upload%20And%20Stream/public/js/app.js) dengan logika antrean berurutan:
 ```javascript
 let uploadQueue = [];
@@ -188,10 +188,10 @@ function processNextInQueue() {
 }
 ```
 
-- [ ] **Step 2: Verify Syntax & Logic**
+- [x] **Step 2: Verify Syntax & Logic**
 Pastikan tidak ada syntax error pada `public/js/app.js`.
 
-- [ ] **Step 3: Commit Task 2**
+- [x] **Step 3: Commit Task 2**
 ```powershell
 git add public/js/app.js
 git commit -m "feat: implement sequential client-side upload queue with status tracking"
@@ -204,13 +204,13 @@ git commit -m "feat: implement sequential client-side upload queue with status t
 **Files:**
 - Test: `tests/*.test.js`
 
-- [ ] **Step 1: Run automated test suite**
+- [x] **Step 1: Run automated test suite**
 ```powershell
 npm test
 ```
 Expected output: 5 passing tests with exit code 0.
 
-- [ ] **Step 2: Commit any test adjustments if needed**
+- [x] **Step 2: Commit any test adjustments if needed**
 
 ---
 
@@ -219,13 +219,13 @@ Expected output: 5 passing tests with exit code 0.
 **Files:**
 - Git remote: `origin/master`
 
-- [ ] **Step 1: Check git status**
+- [x] **Step 1: Check git status**
 ```powershell
 git status
 ```
 Expected: Clean working tree on master branch.
 
-- [ ] **Step 2: Push commits to GitHub**
+- [x] **Step 2: Push commits to GitHub**
 ```powershell
 git push origin master
 ```
