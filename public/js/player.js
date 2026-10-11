@@ -2,6 +2,9 @@
 let hlsInstance = null;
 let vsrPollTimer = null;
 let currentVideoData = null;
+let isPlayerLocked = false;
+let mouseIdleTimer = null;
+let unlockOverlayTimer = null;
 
 function openPlayer(videoId) {
   const video = allVideos.find(v => v.id === videoId);
@@ -73,6 +76,16 @@ function closePlayer() {
     clearInterval(vsrPollTimer);
     vsrPollTimer = null;
   }
+
+  setLockMode(false);
+  if (mouseIdleTimer) {
+    clearTimeout(mouseIdleTimer);
+    mouseIdleTimer = null;
+  }
+  if (unlockOverlayTimer) {
+    clearTimeout(unlockOverlayTimer);
+    unlockOverlayTimer = null;
+  }
 }
 
 // RTX VSR Scale & DirectComposition Monitor
@@ -123,15 +136,100 @@ async function triggerHlsGeneration(videoId) {
   }
 }
 
+function setLockMode(locked) {
+  isPlayerLocked = locked;
+  const modal = document.getElementById('playerModal');
+  const wrapper = document.querySelector('.player-wrapper');
+  const btnLock = document.getElementById('btnToggleLock');
+  const btnUnlock = document.getElementById('btnUnlockOverlay');
+
+  if (isPlayerLocked) {
+    if (modal) modal.classList.add('is-locked');
+    if (wrapper) wrapper.classList.add('is-locked');
+    if (btnLock) {
+      btnLock.classList.add('active-tool');
+      btnLock.textContent = '🔓 Buka Kunci';
+    }
+    showUnlockOverlayTemporarily();
+  } else {
+    if (modal) modal.classList.remove('is-locked');
+    if (wrapper) {
+      wrapper.classList.remove('is-locked');
+      wrapper.classList.remove('is-idle-hidden');
+    }
+    if (btnLock) {
+      btnLock.classList.remove('active-tool');
+      btnLock.textContent = '🔒 Mode Fokus';
+    }
+    if (btnUnlock) btnUnlock.style.display = 'none';
+  }
+}
+
+function showUnlockOverlayTemporarily() {
+  const btnUnlock = document.getElementById('btnUnlockOverlay');
+  if (!btnUnlock || !isPlayerLocked) return;
+
+  btnUnlock.style.display = 'block';
+  btnUnlock.style.opacity = '1';
+
+  if (unlockOverlayTimer) clearTimeout(unlockOverlayTimer);
+  unlockOverlayTimer = setTimeout(() => {
+    if (isPlayerLocked && btnUnlock) {
+      btnUnlock.style.opacity = '0';
+      setTimeout(() => {
+        if (isPlayerLocked && btnUnlock && btnUnlock.style.opacity === '0') {
+          btnUnlock.style.display = 'none';
+        }
+      }, 300);
+    }
+  }, 2500);
+}
+
+async function togglePictureInPicture() {
+  const mainVideo = document.getElementById('mainVideo');
+  if (!document.pictureInPictureEnabled) {
+    alert('Browser Anda tidak mendukung Picture-in-Picture.');
+    return;
+  }
+
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else if (mainVideo && (mainVideo.readyState >= 1 || !mainVideo.paused)) {
+      await mainVideo.requestPictureInPicture();
+    } else {
+      alert('Putar video terlebih dahulu untuk mengaktifkan Picture-in-Picture.');
+    }
+  } catch (err) {
+    console.warn('PiP error:', err.message);
+  }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
   const btnClose = document.getElementById('btnClosePlayer');
   const backdrop = document.getElementById('modalBackdrop');
   const btnFullscreen = document.getElementById('btnToggleFullscreen');
+  const btnToggleLock = document.getElementById('btnToggleLock');
+  const btnUnlockOverlay = document.getElementById('btnUnlockOverlay');
+  const btnTogglePip = document.getElementById('btnTogglePip');
+  const playerWrapper = document.querySelector('.player-wrapper');
   const mainVideo = document.getElementById('mainVideo');
 
   if (btnClose) btnClose.addEventListener('click', closePlayer);
   if (backdrop) backdrop.addEventListener('click', closePlayer);
+
+  if (btnToggleLock) {
+    btnToggleLock.addEventListener('click', () => setLockMode(!isPlayerLocked));
+  }
+
+  if (btnUnlockOverlay) {
+    btnUnlockOverlay.addEventListener('click', () => setLockMode(false));
+  }
+
+  if (btnTogglePip) {
+    btnTogglePip.addEventListener('click', togglePictureInPicture);
+  }
 
   if (btnFullscreen) {
     btnFullscreen.addEventListener('click', () => {
@@ -147,10 +245,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle ESC key
+  if (mainVideo) {
+    mainVideo.addEventListener('enterpictureinpicture', () => {
+      const btnPip = document.getElementById('btnTogglePip');
+      if (btnPip) {
+        btnPip.textContent = '📺 Keluar PiP';
+        btnPip.classList.add('active-tool');
+      }
+    });
+
+    mainVideo.addEventListener('leavepictureinpicture', () => {
+      const btnPip = document.getElementById('btnTogglePip');
+      if (btnPip) {
+        btnPip.textContent = '📺 Picture-in-Picture';
+        btnPip.classList.remove('active-tool');
+      }
+    });
+  }
+
+  if (playerWrapper) {
+    playerWrapper.addEventListener('mousemove', () => {
+      if (isPlayerLocked) {
+        showUnlockOverlayTemporarily();
+      } else if (!mainVideo.paused) {
+        playerWrapper.classList.remove('is-idle-hidden');
+        if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+        mouseIdleTimer = setTimeout(() => {
+          if (!isPlayerLocked && !mainVideo.paused) {
+            playerWrapper.classList.add('is-idle-hidden');
+          }
+        }, 2500);
+      }
+    });
+
+    playerWrapper.addEventListener('mouseleave', () => {
+      playerWrapper.classList.remove('is-idle-hidden');
+      if (mouseIdleTimer) {
+        clearTimeout(mouseIdleTimer);
+        mouseIdleTimer = null;
+      }
+    });
+  }
+
+  // Handle Keyboard shortcuts (L for lock, ESC to unlock or close)
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('playerModal')?.classList.contains('active')) {
-      closePlayer();
+    const modal = document.getElementById('playerModal');
+    if (!modal || !modal.classList.contains('active')) return;
+
+    if (e.key === 'l' || e.key === 'L') {
+      if (['input', 'textarea'].includes(document.activeElement?.tagName?.toLowerCase())) return;
+      setLockMode(!isPlayerLocked);
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      if (isPlayerLocked) {
+        setLockMode(false);
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      } else {
+        closePlayer();
+      }
     }
   });
 });
