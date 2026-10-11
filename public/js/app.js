@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadVideos();
 });
 
+let uploadQueue = [];
+let uploadQueueIndex = 0;
+let isQueueUploading = false;
+let queueStats = { success: 0, failed: 0 };
+
 function initDropzone() {
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
@@ -27,37 +32,84 @@ function initDropzone() {
   });
 
   dropzone.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) uploadFile(files[0]);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length > 0) enqueueFiles(files);
   });
 
   fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) uploadFile(fileInput.files[0]);
+    const files = Array.from(fileInput.files || []);
+    if (files.length > 0) enqueueFiles(files);
+    fileInput.value = ''; // Reset input agar file yang sama bisa dipilih kembali jika perlu
   });
 }
 
-function uploadFile(file) {
+function enqueueFiles(files) {
   const allowed = ['.mp4', '.mkv', '.webm'];
-  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-  if (!allowed.includes(ext)) {
-    alert(`Format ${ext} tidak didukung! Gunakan MP4, MKV, atau WebM.`);
-    return;
+  const validFiles = [];
+  const rejectedFiles = [];
+
+  files.forEach(file => {
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (allowed.includes(ext)) {
+      validFiles.push(file);
+    } else {
+      rejectedFiles.push(file.name);
+    }
+  });
+
+  if (rejectedFiles.length > 0) {
+    alert(`File berikut dilewati karena format tidak didukung (hanya MP4, MKV, WebM):\n- ${rejectedFiles.join('\n- ')}`);
   }
 
+  if (validFiles.length === 0) return;
+
+  validFiles.forEach(f => uploadQueue.push(f));
+
+  if (!isQueueUploading) {
+    uploadQueueIndex = 0;
+    queueStats = { success: 0, failed: 0 };
+    processNextInQueue();
+  }
+}
+
+function processNextInQueue() {
   const progressContainer = document.getElementById('uploadProgressContainer');
   const progressFill = document.getElementById('progressFill');
   const progressPercentage = document.getElementById('uploadPercentage');
   const uploadFileName = document.getElementById('uploadFileName');
   const progressStatus = document.getElementById('progressStatus');
 
+  if (uploadQueueIndex >= uploadQueue.length) {
+    // Seluruh antrean selesai
+    isQueueUploading = false;
+    const totalProcessed = queueStats.success + queueStats.failed;
+    progressStatus.textContent = `Selesai! ${queueStats.success} berhasil, ${queueStats.failed} gagal diunggah.`;
+    progressFill.style.width = '100%';
+    progressPercentage.textContent = '100%';
+    uploadFileName.textContent = `Antrean Selesai (${totalProcessed} video)`;
+
+    setTimeout(() => {
+      progressContainer.style.display = 'none';
+      uploadQueue = [];
+      uploadQueueIndex = 0;
+      loadVideos();
+    }, 2000);
+    return;
+  }
+
+  isQueueUploading = true;
+  const currentFile = uploadQueue[uploadQueueIndex];
+  const totalFiles = uploadQueue.length;
+  const currentNumber = uploadQueueIndex + 1;
+
   progressContainer.style.display = 'block';
-  uploadFileName.textContent = file.name;
+  uploadFileName.textContent = `[${currentNumber}/${totalFiles}] ${currentFile.name}`;
   progressFill.style.width = '0%';
   progressPercentage.textContent = '0%';
-  progressStatus.textContent = 'Mengunggah video ke server...';
+  progressStatus.textContent = `Mengunggah file ${currentNumber} dari ${totalFiles}...`;
 
   const formData = new FormData();
-  formData.append('video', file);
+  formData.append('video', currentFile);
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/upload', true);
@@ -68,29 +120,35 @@ function uploadFile(file) {
       progressFill.style.width = `${percent}%`;
       progressPercentage.textContent = `${percent}%`;
       if (percent === 100) {
-        progressStatus.textContent = 'Memproses metadata dan thumbnail...';
+        progressStatus.textContent = `Memproses metadata & thumbnail (${currentNumber}/${totalFiles})...`;
       }
     }
   };
 
+  const moveToNext = () => {
+    uploadQueueIndex++;
+    processNextInQueue();
+  };
+
   xhr.onload = () => {
     if (xhr.status === 201 || xhr.status === 200) {
-      progressStatus.textContent = 'Upload berhasil!';
-      setTimeout(() => {
-        progressContainer.style.display = 'none';
-        loadVideos();
-      }, 1000);
+      queueStats.success++;
+      progressStatus.textContent = `Berhasil mengunggah ${currentFile.name}!`;
     } else {
+      queueStats.failed++;
       let err = 'Upload gagal';
       try { err = JSON.parse(xhr.responseText).error; } catch(e){}
-      alert('Gagal mengunggah: ' + err);
-      progressContainer.style.display = 'none';
+      console.warn(`Gagal upload ${currentFile.name}:`, err);
+      progressStatus.textContent = `Gagal mengunggah ${currentFile.name}. Melanjutkan antrean...`;
     }
+    setTimeout(moveToNext, 600);
   };
 
   xhr.onerror = () => {
-    alert('Terjadi kesalahan jaringan saat mengunggah.');
-    progressContainer.style.display = 'none';
+    queueStats.failed++;
+    console.error(`Kesalahan jaringan pada ${currentFile.name}`);
+    progressStatus.textContent = `Kesalahan koneksi saat mengunggah ${currentFile.name}. Melanjutkan antrean...`;
+    setTimeout(moveToNext, 600);
   };
 
   xhr.send(formData);
