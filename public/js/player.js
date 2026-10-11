@@ -64,6 +64,10 @@ function closePlayer() {
   const modal = document.getElementById('playerModal');
   const mainVideo = document.getElementById('mainVideo');
 
+  if (document.pictureInPictureElement) {
+    document.exitPictureInPicture().catch(() => {});
+  }
+
   mainVideo.pause();
   if (hlsInstance) {
     hlsInstance.destroy();
@@ -162,6 +166,10 @@ function setLockMode(locked) {
       btnLock.textContent = '🔒 Mode Fokus';
     }
     if (btnUnlock) btnUnlock.style.display = 'none';
+    if (unlockOverlayTimer) {
+      clearTimeout(unlockOverlayTimer);
+      unlockOverlayTimer = null;
+    }
   }
 }
 
@@ -261,20 +269,32 @@ document.addEventListener('DOMContentLoaded', () => {
         btnPip.classList.remove('active-tool');
       }
     });
+
+    const resetIdleCursor = () => {
+      if (playerWrapper) playerWrapper.classList.remove('is-idle-hidden');
+      if (mouseIdleTimer) {
+        clearTimeout(mouseIdleTimer);
+        mouseIdleTimer = null;
+      }
+    };
+    mainVideo.addEventListener('pause', resetIdleCursor);
+    mainVideo.addEventListener('ended', resetIdleCursor);
   }
 
   if (playerWrapper) {
     playerWrapper.addEventListener('mousemove', () => {
       if (isPlayerLocked) {
         showUnlockOverlayTemporarily();
-      } else if (!mainVideo.paused) {
+      } else {
         playerWrapper.classList.remove('is-idle-hidden');
         if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
-        mouseIdleTimer = setTimeout(() => {
-          if (!isPlayerLocked && !mainVideo.paused) {
-            playerWrapper.classList.add('is-idle-hidden');
-          }
-        }, 2500);
+        if (!mainVideo.paused) {
+          mouseIdleTimer = setTimeout(() => {
+            if (!isPlayerLocked && !mainVideo.paused) {
+              playerWrapper.classList.add('is-idle-hidden');
+            }
+          }, 2500);
+        }
       }
     });
 
@@ -292,13 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('playerModal');
     if (!modal || !modal.classList.contains('active')) return;
 
-    if (e.key === 'l' || e.key === 'L') {
+    if ((e.key === 'l' || e.key === 'L') && !e.ctrlKey && !e.altKey && !e.metaKey) {
       if (['input', 'textarea'].includes(document.activeElement?.tagName?.toLowerCase())) return;
       setLockMode(!isPlayerLocked);
       return;
     }
 
     if (e.key === 'Escape') {
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
       if (isPlayerLocked) {
         setLockMode(false);
         e.preventDefault();
