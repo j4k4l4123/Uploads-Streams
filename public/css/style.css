@@ -537,3 +537,52 @@ video {
   margin-top: 24px;
   text-align: right;
 }
+
+/* Lock / Focus Mode & Auto-Hide Styles */
+.player-modal.is-locked .player-header,
+.player-modal.is-locked .player-tools,
+.player-modal.is-locked .vsr-hud {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.player-wrapper.is-locked,
+.player-wrapper.is-locked video,
+.player-wrapper.is-idle-hidden,
+.player-wrapper.is-idle-hidden video {
+  cursor: none !important;
+}
+
+/* Floating Unlock Button */
+.btn-unlock-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(15, 17, 23, 0.85);
+  backdrop-filter: blur(8px);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.3);
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.25s ease;
+  pointer-events: auto;
+}
+
+.btn-unlock-overlay:hover {
+  background: var(--primary);
+  color: #0b0d13;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+  transform: scale(1.05);
+}
+
+.btn.active-tool {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+}
